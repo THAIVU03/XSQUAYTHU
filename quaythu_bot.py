@@ -209,6 +209,20 @@ def quay_thu_lo(message):
     except IndexError:
         bot.send_message(chat_id, "❗ Bạn chưa chọn số. Hãy nhập lệnh theo cú pháp: /quaythulo xx (vd: /quaythulo 00)")
 
+@bot.message_handler(commands=['menu'])
+def menu(message):
+    chat_id = message.chat.id
+    menu_message = (
+        "📌 <b>Danh sách lệnh:</b>\n"
+        "- /quaythu → Quay thử.\n"
+        "- /quaythude → Quay thử đề kèm số đề (00-99). Ví dụ: /quaythude 00\n"
+        "- /quaythu3cang → Quay thử 3 càng đề (000-999). Ví dụ: /quaythu3cang 000\n"
+        "- /quaythulo [số] → Quay thử lô kèm số lô (00-99). Ví dụ: /quaythulo 00\n"
+        "- /quaythu_xs → Thống kê tần suất lô tô.\n"
+    )
+    bot.send_message(chat_id, menu_message, parse_mode='HTML')
+
+
 # Chạy bot
 if __name__ == '__main__':
     bot.polling(none_stop=True)
