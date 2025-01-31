@@ -235,18 +235,28 @@ def download_tiktok(message):
         
         bot.send_message(chat_id, "⏳ Đang tải video TikTok... Vui lòng chờ!")
         
-        # Gửi request đến API tải video TikTok (sử dụng một dịch vụ bên thứ ba như snaptik.app hoặc API khác)
-        api_url = f"https://api.tiktokdownloader.com?url={video_url}"
-        response = requests.get(api_url).json()
+        # Gửi yêu cầu đến API tải video TikTok
+        api_url = "https://snaptik.app/api/convert"  # URL của API (điều chỉnh nếu cần)
+        params = {
+            'url': video_url
+        }
+        response = requests.get(api_url, params=params)
         
-        if "video_url" in response:
-            bot.send_video(chat_id, response["video_url"], caption="🎥 Video TikTok của bạn đây!")
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('status') == 'success':
+                video_link = data['video']['url']  # Điều chỉnh nếu cấu trúc JSON khác
+                bot.send_message(chat_id, f"🎉 Video TikTok đã tải xong! Bạn có thể tải tại đây: {video_link}")
+            else:
+                bot.send_message(chat_id, "❗ Không thể tải video. Vui lòng kiểm tra lại đường link.")
         else:
-            bot.send_message(chat_id, "❌ Không thể tải video. Hãy thử lại sau!")
+            bot.send_message(chat_id, "❗ Đã xảy ra lỗi khi tải video. Vui lòng thử lại sau.")
+    
     except IndexError:
-        bot.send_message(chat_id, "❗ Vui lòng nhập link TikTok theo cú pháp: /tiktok [link]")
+        bot.send_message(chat_id, "❗ Bạn chưa gửi đường link video TikTok. Vui lòng sử dụng cú pháp: /tiktok [link]")
     except Exception as e:
-        bot.send_message(chat_id, f"⚠️ Lỗi xảy ra: {str(e)}")
+        bot.send_message(chat_id, f"❗ Đã xảy ra lỗi: {str(e)}")
+
 
 # Chạy bot
 if __name__ == '__main__':
