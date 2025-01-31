@@ -3,6 +3,7 @@ import random
 import time
 from datetime import datetime
 from collections import defaultdict
+import requests
 
 TOKEN = '7618979983:AAGDWrAVf6NgNkBTa7dS-kmH0k5BbWHhNw8'
 bot = telebot.TeleBot(TOKEN)
@@ -168,88 +169,22 @@ def quay_thu_3cang(message):
         # Tạo kết quả mới cho lệnh quay thử
         send_results(chat_id, user_name)
 
-        last_special_number = str(all_results[-1]["Giải Đặc Biệt"])[-3:]
-
-        if selected_number == last_special_number:
-            bot.send_message(chat_id, f"🎉 Chúc mừng <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} và trúng giải đặc biệt! 🎉", parse_mode='HTML')
+        # Lấy giải Đặc Biệt
+        special_number = str(all_results[-1]["Giải Đặc Biệt"])
+        
+        # Kiểm tra xem số đã chọn có trúng không
+        if selected_number in special_number:
+            bot.send_message(chat_id, f"🎉 Chúc mừng <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} và trúng giải Đặc Biệt! 🎉", parse_mode='HTML')
         else:
-            bot.send_message(chat_id, f"😢 Chia buồn <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} không trúng giải đặc biệt. Số cuối là {last_special_number}. Chúc Bạn May Mắn Lần Sau! 🍀", parse_mode='HTML')
+            bot.send_message(chat_id, f"😢 Chia buồn <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} không trúng giải đặc biệt. Số đặc biệt là {special_number}. Chúc Bạn May Mắn Lần Sau! 🍀", parse_mode='HTML')
 
     except IndexError:
         bot.send_message(chat_id, "❗ Bạn chưa chọn số. Hãy nhập lệnh theo cú pháp: /quaythu3cang xxx (vd: /quaythu3cang 123)")
 
-@bot.message_handler(commands=['quaythulo'])
-def quay_thu_lo(message):
-    user_id = message.from_user.id
+@bot.message_handler(commands=['chat'])
+def chat(message):
     user_name = message.from_user.first_name
     chat_id = message.chat.id
+    bot.send_message(chat_id, f"💬 Chào {user_name}! Bạn có thể hỏi bất kỳ điều gì ở đây!")
 
-    try:
-        selected_number = message.text.split()[1]
-
-        # Kiểm tra tính hợp lệ của số nhập vào
-        if not selected_number.isdigit() or len(selected_number) != 2 or not (0 <= int(selected_number) <= 99):
-            bot.send_message(chat_id, "❗ Vui lòng nhập một số hợp lệ từ 00 đến 99. Ví dụ: /quaythulo 00")
-            return
-
-        # Tạo kết quả mới cho lệnh quay thử
-        send_results(chat_id, user_name)
-
-        match_found = False
-        for title, values in all_results[-1].items():
-            if isinstance(values, list):
-                if selected_number in [str(value)[-2:].zfill(2) for value in values]:
-                    match_found = True
-                    break
-
-        if match_found:
-            bot.send_message(chat_id, f"🎉 Chúc mừng {user_name}! Bạn đã chọn số {selected_number} và trúng lô tô! 🎉")
-        else:
-            bot.send_message(chat_id, f"😢 Chia buồn {user_name}! Bạn đã chọn số {selected_number} không trúng lô tô. Chúc Bạn May Mắn Lần Sau! 🍀")
-    except IndexError:
-        bot.send_message(chat_id, "❗ Bạn chưa chọn số. Hãy nhập lệnh theo cú pháp: /quaythulo xx (vd: /quaythulo 00)")
-
-@bot.message_handler(commands=['menu'])
-def menu(message):
-    chat_id = message.chat.id
-    menu_message = (
-        "📌 <b>Danh sách lệnh:</b>\n"
-        "- /quaythu → Quay thử.\n"
-        "- /quaythude → Quay thử đề kèm số đề (00-99). Ví dụ: /quaythude 00\n"
-        "- /quaythu3cang → Quay thử 3 càng đề (000-999). Ví dụ: /quaythu3cang 000\n"
-        "- /quaythulo [số] → Quay thử lô kèm số lô (00-99). Ví dụ: /quaythulo 00\n"
-        "- /quaythu_xs → Thống kê tần suất lô tô.\n"
-    )
-    bot.send_message(chat_id, menu_message, parse_mode='HTML')
-
-import requests
-
-@bot.message_handler(commands=['tiktok'])
-def tiktok_download(message):
-    chat_id = message.chat.id
-
-    try:
-        # Lấy URL từ tin nhắn của người dùng
-        url = message.text.split()[1]
-
-        # Tạo yêu cầu tới dịch vụ tải video (thay thế bằng URL của dịch vụ bạn muốn sử dụng)
-        response = requests.get(f'http://your_tiktok_download_service.com/download?url={url}')
-
-        if response.status_code == 200:
-            # Giả sử dịch vụ trả về URL của video đã tải
-            video_url = response.json().get('video_url')
-            bot.send_message(chat_id, f"🎉 Video TikTok đã được tải xuống! Tải về tại: {video_url}")
-        else:
-            bot.send_message(chat_id, "❗ Không thể tải video. Vui lòng kiểm tra lại URL.")
-
-    except IndexError:
-        bot.send_message(chat_id, "❗ Vui lòng nhập URL video TikTok. Ví dụ: /tiktok https://www.tiktok.com/@user/video/1234567890")
-    except Exception as e:
-        bot.send_message(chat_id, f"❗ Đã xảy ra lỗi: {str(e)}")
-
-
-
-
-# Chạy bot
-if __name__ == '__main__':
-    bot.polling(none_stop=True)
+@bot.polling()
