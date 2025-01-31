@@ -3,6 +3,7 @@ import random
 import time
 from datetime import datetime
 from collections import defaultdict
+import requests # type: ignore
 
 TOKEN = '7618979983:AAGDWrAVf6NgNkBTa7dS-kmH0k5BbWHhNw8'
 bot = telebot.TeleBot(TOKEN)
