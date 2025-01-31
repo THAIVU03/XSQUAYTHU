@@ -222,6 +222,30 @@ def menu(message):
     )
     bot.send_message(chat_id, menu_message, parse_mode='HTML')
 
+@bot.message_handler(commands=['tiktok'])
+def download_tiktok(message):
+    chat_id = message.chat.id
+    try:
+        video_url = message.text.split()[1]
+        
+        if "tiktok.com" not in video_url:
+            bot.send_message(chat_id, "❌ Vui lòng gửi một đường link TikTok hợp lệ!")
+            return
+        
+        bot.send_message(chat_id, "⏳ Đang tải video TikTok... Vui lòng chờ!")
+        
+        # Gửi request đến API tải video TikTok (sử dụng một dịch vụ bên thứ ba như snaptik.app hoặc API khác)
+        api_url = f"https://api.tiktokdownloader.com?url={video_url}"
+        response = requests.get(api_url).json()
+        
+        if "video_url" in response:
+            bot.send_video(chat_id, response["video_url"], caption="🎥 Video TikTok của bạn đây!")
+        else:
+            bot.send_message(chat_id, "❌ Không thể tải video. Hãy thử lại sau!")
+    except IndexError:
+        bot.send_message(chat_id, "❗ Vui lòng nhập link TikTok theo cú pháp: /tiktok [link]")
+    except Exception as e:
+        bot.send_message(chat_id, f"⚠️ Lỗi xảy ra: {str(e)}")
 
 # Chạy bot
 if __name__ == '__main__':
