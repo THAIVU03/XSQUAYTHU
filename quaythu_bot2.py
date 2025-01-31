@@ -3,7 +3,6 @@ import random
 import time
 from datetime import datetime
 from collections import defaultdict
-import requests # type: ignore
 
 TOKEN = '7618979983:AAGDWrAVf6NgNkBTa7dS-kmH0k5BbWHhNw8'
 bot = telebot.TeleBot(TOKEN)
@@ -248,6 +247,52 @@ def tiktok_download(message):
     except Exception as e:
         bot.send_message(chat_id, f"❗ Đã xảy ra lỗi: {str(e)}")
 
+import requests
+from hashlib import md5
+from telegram import Update
+from telegram.ext import CommandHandler, CallbackContext
+
+# Hàm để tạo email mới
+def newmail(update: Update, context: CallbackContext):
+    # Gọi API để tạo email mới
+    api_url = "https://temp-mail.org/api/generate/"
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+        new_email = response.json()
+        email_address = new_email[0]  # Lấy địa chỉ email đầu tiên
+        update.message.reply_text(f"Địa chỉ email tạm thời của bạn là: {email_address}")
+    else:
+        update.message.reply_text("Đã xảy ra lỗi khi tạo email mới.")
+
+# Hàm để xử lý lệnh /mailao
+def mailao(update: Update, context: CallbackContext):
+    if len(context.args) != 1:
+        update.message.reply_text("Vui lòng cung cấp email tạm thời của bạn dưới dạng: /mailao <email_address>")
+        return
+
+    email_address = context.args[0]
+    email_hash = md5(email_address.encode()).hexdigest()
+
+    # Gọi API để nhận email
+    api_url = f"https://temp-mail.org/api/mail/{email_hash}/format/json/"
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+        emails = response.json()
+        if emails:
+            message = "Email đã nhận:\n"
+            for email in emails:
+                message += f"- Từ: {email['from']}\n- Chủ đề: {email['subject']}\n- Thời gian: {email['time']}\n\n"
+            update.message.reply_text(message)
+        else:
+            update.message.reply_text("Không có email nào.")
+    else:
+        update.message.reply_text("Đã xảy ra lỗi khi gọi API.")
+
+# Thêm CommandHandler cho lệnh /newmail và /mailao
+dispatcher.add_handler(CommandHandler("newmail", newmail))
+dispatcher.add_handler(CommandHandler("mailao", mailao))
 
 
 
