@@ -223,39 +223,32 @@ def menu(message):
     )
     bot.send_message(chat_id, menu_message, parse_mode='HTML')
 
+import requests
+
 @bot.message_handler(commands=['tiktok'])
-def download_tiktok(message):
+def tiktok_download(message):
     chat_id = message.chat.id
+
     try:
-        video_url = message.text.split()[1]
-        
-        if "tiktok.com" not in video_url:
-            bot.send_message(chat_id, "❌ Vui lòng gửi một đường link TikTok hợp lệ!")
-            return
-        
-        bot.send_message(chat_id, "⏳ Đang tải video TikTok... Vui lòng chờ!")
-        
-        # Gửi yêu cầu đến API tải video TikTok
-        api_url = "https://snaptik.app/api/convert"  # URL của API (điều chỉnh nếu cần)
-        params = {
-            'url': video_url
-        }
-        response = requests.get(api_url, params=params)
-        
+        # Lấy URL từ tin nhắn của người dùng
+        url = message.text.split()[1]
+
+        # Tạo yêu cầu tới dịch vụ tải video (thay thế bằng URL của dịch vụ bạn muốn sử dụng)
+        response = requests.get(f'http://your_tiktok_download_service.com/download?url={url}')
+
         if response.status_code == 200:
-            data = response.json()
-            if data.get('status') == 'success':
-                video_link = data['video']['url']  # Điều chỉnh nếu cấu trúc JSON khác
-                bot.send_message(chat_id, f"🎉 Video TikTok đã tải xong! Bạn có thể tải tại đây: {video_link}")
-            else:
-                bot.send_message(chat_id, "❗ Không thể tải video. Vui lòng kiểm tra lại đường link.")
+            # Giả sử dịch vụ trả về URL của video đã tải
+            video_url = response.json().get('video_url')
+            bot.send_message(chat_id, f"🎉 Video TikTok đã được tải xuống! Tải về tại: {video_url}")
         else:
-            bot.send_message(chat_id, "❗ Đã xảy ra lỗi khi tải video. Vui lòng thử lại sau.")
-    
+            bot.send_message(chat_id, "❗ Không thể tải video. Vui lòng kiểm tra lại URL.")
+
     except IndexError:
-        bot.send_message(chat_id, "❗ Bạn chưa gửi đường link video TikTok. Vui lòng sử dụng cú pháp: /tiktok [link]")
+        bot.send_message(chat_id, "❗ Vui lòng nhập URL video TikTok. Ví dụ: /tiktok https://www.tiktok.com/@user/video/1234567890")
     except Exception as e:
         bot.send_message(chat_id, f"❗ Đã xảy ra lỗi: {str(e)}")
+
+
 
 
 # Chạy bot
