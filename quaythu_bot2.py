@@ -1,4 +1,9 @@
 import requests
+import telebot
+
+# Thay token bot Telegram của bạn
+TELEGRAM_BOT_TOKEN = "7618979983:AAGDWrAVf6NgNkBTa7dS-kmH0k5BbWHhNw8"
+bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
 # Đọc danh sách token từ file
 def load_tokens(file_path="ttc_accounts.txt"):
@@ -17,22 +22,30 @@ def login_ttc(access_token):
         if data.get("status") == "success":
             user = data["data"]["user"]
             balance = data["data"]["sodu"]
-            print(f"✅ Đăng nhập thành công: {user} | Số dư: {balance} xu")
             return user, balance
         else:
-            print(f"❌ Token {access_token[:5]}*** bị lỗi!")
+            return None, "Token lỗi!"
     else:
-        print(f"⚠️ Lỗi kết nối API với token {access_token[:5]}***")
-    
-    return None, None
+        return None, "Lỗi kết nối API"
 
-# Chạy kiểm tra danh sách tài khoản
-if __name__ == "__main__":
+@bot.message_handler(commands=['check_balance'])
+def handle_check_balance(message):
+    chat_id = message.chat.id
     tokens = load_tokens()
     
     if not tokens:
-        print("⚠️ Không tìm thấy token nào trong file `ttc_accounts.txt`!")
-    else:
-        print(f"📌 Kiểm tra {len(tokens)} tài khoản TuongTacCheo...")
-        for token in tokens:
-            login_ttc(token)
+        bot.send_message(chat_id, "⚠️ Không tìm thấy token nào trong file `ttc_accounts.txt`!")
+        return
+    
+    response_messages = []
+    for token in tokens:
+        user, balance_or_error = login_ttc(token)
+        if user:
+            response_messages.append(f"✅ Tài khoản: {user} | Số dư: {balance_or_error} xu")
+        else:
+            response_messages.append(f"❌ {balance_or_error} với token {token[:5]}***")
+
+    bot.send_message(chat_id, "\n".join(response_messages))
+
+# Chạy bot Telegram
+bot.polling(none_stop=True)
