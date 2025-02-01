@@ -66,7 +66,10 @@ def handle_ttctt(message):
                 "soluong": follow_count
             })
             
-            if buy_response.status_code == 200 and buy_response.json().get("status") == "success":
+            response_data = buy_response.json()
+bot.send_message(chat_id, f"📜 Phản hồi API: {response_data}")
+
+if buy_response.status_code == 200 and response_data.get("status") == "success":
                 bot.send_message(chat_id, f"✅ Tài khoản {user} ({sodu} xu) đã mua {follow_count} follow thành công cho @{tiktok_username}! 🎉")
                 return  # Dừng vòng lặp sau khi mua thành công
             else:
