@@ -1,16 +1,9 @@
-import telebot
-import random
-import time
-import threading
-from datetime import datetime
-
-TOKEN = '7618979983:AAGDWrAVf6NgNkBTa7dS-kmH0k5BbWHhNw8'
-bot = telebot.TeleBot(TOKEN)
-
 # Biến để lưu số phiên hiện tại và tổng hợp số lần quay thử của người dùng
 current_session = 1
 user_attempts = {}
-all_results = []
+all_results = {}
+
+users_in_session = set()
 
 def increment_session():
     global current_session
@@ -30,18 +23,8 @@ def scheduled_quay_thu(chat_id, user_id, user_name):
         # Đợi 55 giây trước khi quay thử tiếp theo
         time.sleep(55)
 
-@bot.message_handler(commands=['quaythu'])
-def quay_thu(message):
-    user_id = message.from_user.id
-    user_name = message.from_user.first_name
-    chat_id = message.chat.id
-
-    # Tăng số lần quay thử của người dùng
-    if user_id not in user_attempts:
-        user_attempts[user_id] = 0
-    user_attempts[user_id] += 1
-
-    # Bắt đầu luồng cho quay thử định kỳ
+def start_quay_thu_for_user(chat_id, user_id, user_name):
+    users_in_session.add((chat_id, user_id, user_name))
     threading.Thread(target=scheduled_quay_thu, args=(chat_id, user_id, user_name)).start()
 
 def send_results(chat_id, user_name):
@@ -49,7 +32,6 @@ def send_results(chat_id, user_name):
     global current_session
 
     # Tạo kết quả ngẫu nhiên
-    date_now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     results = {
         "Giải Đặc Biệt": random.randint(10000, 99999),
         "Giải Nhất": random.randint(10000, 99999),
@@ -62,6 +44,9 @@ def send_results(chat_id, user_name):
     }
 
     all_results.append(results)
+
+    # Lấy thời gian thực tại thời điểm gửi kết quả
+    date_now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     # Tạo kết quả định dạng
     result_message = f"🎲 KẾT QUẢ QUAY THỬ XỔ SỐ MIỀN BẮC 🎲\n\n"
@@ -86,12 +71,15 @@ def quay_thude(message):
     user_name = message.from_user.first_name
     chat_id = message.chat.id
 
+    # Bắt đầu quay thử cho người dùng nếu họ chưa có phiên quay thử
+    if (chat_id, user_id, user_name) not in users_in_session:
+        start_quay_thu_for_user(chat_id, user_id, user_name)
+
     try:
         selected_number = message.text.split()[1]
 
         # Kiểm tra tính hợp lệ của số nhập vào
-        if not selected_number.isdigit() or len(selected_number) != 2 or not (0 <= int(selected_number) <= 99):
-            bot.send_message(chat_id, "❗️ Vui lòng nhập một số hợp lệ từ 00 đến 99. Ví dụ: /quaythude 00")
+        if not selected_number.isdigit() or len(selected_number) != 2 or not (0 <= int(selected_number) <= 99):bot.send_message(chat_id, "❗️ Vui lòng nhập một số hợp lệ từ 00 đến 99. Ví dụ: /quaythude 00")
             return
 
         # Gọi hàm gửi kết quả để tạo danh sách các giải thưởng
@@ -103,36 +91,6 @@ def quay_thude(message):
             bot.send_message(chat_id, f"🎉 Chúc mừng <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} và trúng giải đặc biệt! 🎉", parse_mode='HTML')
         else:
             bot.send_message(chat_id, f"😢 Chia buồn <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} không trúng giải đặc biệt. Số cuối là {last_special_number}. Chúc Bạn May Mắn Lần Sau! 🍀", parse_mode='HTML')
-
-    except IndexError:
-        bot.send_message(chat_id, "❗️ Bạn chưa chọn số. Hãy nhập lệnh theo cú pháp: /quaythude xx (vd: /quaythude 00)")
-
-@bot.message_handler(commands=['quaythude'])
-def quay_thude(message):
-    user_id = message.from_user.id
-    user_name = message.from_user.first_name
-    chat_id = message.chat.id
-
-    try:
-        selected_number = message.text.split()[1]
-
-        # Kiểm tra tính hợp lệ của số nhập vào
-        if not selected_number.isdigit() or len(selected_number) != 2 or not (0 <= int(selected_number) <= 99):
-            bot.send_message(chat_id, "❗️ Vui lòng nhập một số hợp lệ từ 00 đến 99. Ví dụ: /quaythude 00")
-            return
-
-        # Tạo kết quả mới cho lệnh quay thử
-        send_results(chat_id, user_name)
-
-        last_special_number = str(all_results[-1]["Giải Đặc Biệt"])[-2:]
-
-        if selected_number == last_special_number:
-            bot.send_message(chat_id, f"🎉 Chúc mừng <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} và trúng giải đặc biệt! 🎉", parse_mode='HTML')
-        else:
-            bot.send_message(chat_id, f"😢 Chia buồn <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} không trúng giải đặc biệt. Số cuối là {last_special_number}. Chúc Bạn May Mắn Lần Sau! 🍀", parse_mode='HTML')
-
-    except IndexError:
-        bot.send_message(chat_id, "❗️ Bạn chưa chọn số. Hãy nhập lệnh theo cú pháp: /quaythude xx (vd: /quaythude 00)")
 
 @bot.message_handler(commands=['quaythu_xs'])
 def quay_thu_xs(message):
