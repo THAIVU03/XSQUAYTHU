@@ -1,3 +1,12 @@
+import telebot
+import random
+import time
+import threading
+from datetime import datetime
+
+TOKEN = '7618979983:AAGDWrAVf6NgNkBTa7dS-kmH0k5BbWHhNw8'
+bot = telebot.TeleBot(TOKEN)
+
 # Biến để lưu số phiên hiện tại và tổng hợp số lần quay thử của người dùng
 current_session = 1
 user_attempts = {}
