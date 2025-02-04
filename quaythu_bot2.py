@@ -3,10 +3,15 @@ import random
 import time
 import threading
 from datetime import datetime
+from collections import defaultdict
 
+TOKEN = '7618979983:AAGDWrAVf6NgNkBTa7dS-kmH0k5BbWHhNw8'
+bot = telebot.TeleBot(TOKEN)
+
+# Biến để lưu số phiên hiện tại và tổng hợp số lần quay thử của người dùng
 current_session = 1
 user_attempts = {}
-all_results = []  # Sửa lỗi khai báo all_results từ {} thành []
+all_results = {}
 
 users_in_session = set()
 
