@@ -16,6 +16,20 @@ def increment_session():
     global current_session
     current_session += 1
 
+def scheduled_quay_thu(chat_id, user_id, user_name):
+    while True:
+        # Thông báo đang quay thử
+        bot.send_message(chat_id, f"🎲 <a href='tg://user?id={user_id}'>{user_name}</a> đang quay thử kết quả xổ số... Chúc Bạn May Mắn! 🎉", parse_mode='HTML')
+        
+        # Đợi 5 giây trước khi gửi kết quả
+        time.sleep(5)
+        
+        # Gọi hàm gửi kết quả
+        send_results(chat_id, user_name)
+        
+        # Đợi 55 giây trước khi quay thử tiếp theo
+        time.sleep(55)
+
 @bot.message_handler(commands=['quaythu'])
 def quay_thu(message):
     user_id = message.from_user.id
@@ -27,14 +41,8 @@ def quay_thu(message):
         user_attempts[user_id] = 0
     user_attempts[user_id] += 1
 
-    # Thông báo đang quay thử
-    bot.send_message(chat_id, f"🎲 <a href='tg://user?id={user_id}'>{user_name}</a> đang quay thử kết quả xổ số... Chúc Bạn May Mắn! 🎉", parse_mode='HTML')
-
-    # Đợi 5 giây trước khi gửi kết quả
-    time.sleep(5)
-
-    # Gọi hàm gửi kết quả
-    send_results(chat_id, user_name)
+    # Bắt đầu luồng cho quay thử định kỳ
+    threading.Thread(target=scheduled_quay_thu, args=(chat_id, user_id, user_name)).start()
 
 def send_results(chat_id, user_name):
     global all_results
@@ -75,7 +83,7 @@ def send_results(chat_id, user_name):
 
     # Tăng số phiên lên 1 sau khi gửi kết quả
     increment_session()
-
+    
 @bot.message_handler(commands=['quaythude'])
 def quay_thude(message):
     user_id = message.from_user.id
