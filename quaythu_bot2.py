@@ -1,8 +1,8 @@
 import telebot
 import random
 import time
+import threading
 from datetime import datetime
-from collections import defaultdict
 
 TOKEN = '7618979983:AAGDWrAVf6NgNkBTa7dS-kmH0k5BbWHhNw8'
 bot = telebot.TeleBot(TOKEN)
@@ -83,7 +83,7 @@ def send_results(chat_id, user_name):
 
     # Tăng số phiên lên 1 sau khi gửi kết quả
     increment_session()
-    
+
 @bot.message_handler(commands=['quaythude'])
 def quay_thude(message):
     user_id = message.from_user.id
@@ -95,7 +95,7 @@ def quay_thude(message):
 
         # Kiểm tra tính hợp lệ của số nhập vào
         if not selected_number.isdigit() or len(selected_number) != 2 or not (0 <= int(selected_number) <= 99):
-            bot.send_message(chat_id, "❗ Vui lòng nhập một số hợp lệ từ 00 đến 99. Ví dụ: /quaythude 00")
+            bot.send_message(chat_id, "❗️ Vui lòng nhập một số hợp lệ từ 00 đến 99. Ví dụ: /quaythude 00")
             return
 
         # Tạo kết quả mới cho lệnh quay thử
@@ -109,7 +109,7 @@ def quay_thude(message):
             bot.send_message(chat_id, f"😢 Chia buồn <a href='tg://user?id={user_id}'>{user_name}</a>! Bạn đã chọn số {selected_number} không trúng giải đặc biệt. Số cuối là {last_special_number}. Chúc Bạn May Mắn Lần Sau! 🍀", parse_mode='HTML')
 
     except IndexError:
-        bot.send_message(chat_id, "❗ Bạn chưa chọn số. Hãy nhập lệnh theo cú pháp: /quaythude xx (vd: /quaythude 00)")
+        bot.send_message(chat_id, "❗️ Bạn chưa chọn số. Hãy nhập lệnh theo cú pháp: /quaythude xx (vd: /quaythude 00)")
 
 @bot.message_handler(commands=['quaythu_xs'])
 def quay_thu_xs(message):
@@ -230,7 +230,5 @@ def menu(message):
     )
     bot.send_message(chat_id, menu_message, parse_mode='HTML')
 
-
-# Chạy bot
-if __name__ == '__main__':
-    bot.polling(none_stop=True)
+# Đừng quên chạy bot
+bot.polling()
